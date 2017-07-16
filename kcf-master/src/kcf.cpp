@@ -280,6 +280,15 @@ void KCF_Tracker::track(cv::Mat &img)
 
 // ****************************************************************************
 
+//capstone function
+double KCF_Tracker::human_face_score(cv::Mat & input_rgb, cv::Mat & input_gray, int cx, int cy, int size_x, int size_y, double scale)
+{
+    
+}
+
+
+
+
 std::vector<cv::Mat> KCF_Tracker::get_features(cv::Mat & input_rgb, cv::Mat & input_gray, int cx, int cy, int size_x, int size_y, double scale)
 {
     int size_x_scaled = floor(size_x*scale);

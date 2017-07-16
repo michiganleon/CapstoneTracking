@@ -76,6 +76,7 @@ private:
     double p_scale_step = 1.02;
     double p_current_scale = 1.;
     double p_min_max_scale[2];
+    double detector_tracker_ratio = 1.0;
     std::vector<double> p_scales;
 
     //model
@@ -97,6 +98,7 @@ private:
     std::vector<cv::Mat> get_features(cv::Mat & input_rgb, cv::Mat & input_gray, int cx, int cy, int size_x, int size_y, double scale = 1.);
     cv::Point2f sub_pixel_peak(cv::Point & max_loc, cv::Mat & response);
     double sub_grid_scale(std::vector<double> & responses, int index = -1);
+    double human_face_score(cv::Mat & input_rgb, cv::Mat & input_gray, int cx, int cy, int size_x, int size_y, double scale = 1.);
 
 };
 
