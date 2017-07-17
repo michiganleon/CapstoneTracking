@@ -77,6 +77,7 @@ private:
     double p_current_scale = 1.;
     double p_min_max_scale[2];
     double detector_tracker_ratio = 1.0;
+    double detector_threshhold = 0.5;
     std::vector<double> p_scales;
 
     //model
