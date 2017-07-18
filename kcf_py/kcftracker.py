@@ -310,7 +310,7 @@ class KCFTracker:
 		if(self._roi[1]+self._roi[3] <= 0):  self._roi[1] = -self._roi[3] + 2
 		assert(self._roi[2]>0 and self._roi[3]>0)
 
-		x = self.getFeatures(image, 0, 1.0)
-		self.train(x, self.interp_factor)
+		#x = self.getFeatures(image, 0, 1.0)
+		#self.train(x, self.interp_factor)
 
 		return self._roi
