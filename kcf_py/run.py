@@ -11,6 +11,8 @@ onTracking = False
 ix, iy, cx, cy = -1, -1, -1, -1
 w, h = 0, 0
 counter = 0
+grace_period = 50
+grace_counter = 0
 
 inteval = 1
 duration = 0.01
@@ -86,16 +88,23 @@ if __name__ == '__main__':
 			t1 = time()
 
 			boundingbox = map(int, boundingbox)
-			if(detector.is_face(boundingbox)):
-				cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
 
-				duration = 0.8*duration + 0.2*(t1-t0)
-				#duration = t1-t0
-				cv2.putText(frame, 'FPS: '+str(1/duration)[:4].strip('.'), (8,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
+			if(detector.is_face(boundingbox)):
+				#do nothing
+			elif(detector.result_num > 0):
+				boundingbox = detector.result[0]
+				tracker.init(detector.best_face, frame)
+			elif(grace_counter < grace_counter):
+				grace_counter++
 			else:
 				initTracking = True
 				onTracking = False
+				return
 
+			cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
+			duration = 0.8*duration + 0.2*(t1-t0)
+			#duration = t1-t0
+			cv2.putText(frame, 'FPS: '+str(1/duration)[:4].strip('.'), (8,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
 
 		cv2.imshow('tracking', frame)
 		c = cv2.waitKey(inteval) & 0xFF
