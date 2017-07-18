@@ -96,23 +96,26 @@ class FRCNNDetector:
 		#threshhold to be face 
 		self.th = 0
 		self.result_num = 0
+		self.overlap_th = 0.6
 
 	def update(self, image):
 		#faster rcnn result
 		self.result = 0
 		#sort the position in decending order
-		self.result = sorted(self.result, key=lambda self.result:self.result[4],reverse=True)
+		result = self.result
+		self.result = sorted(result, key=lambda result:result[4],reverse=True)
 		self.result_num = np.shape(self.result)[0]
 
 	def no_face():
 		return (self.result_num == 0)
 
 	def best_face():
-		if(!self.no_face()):
+		if(not self.no_face()):
 			return self.result[0]
 		else:
 			return 0
 
+	#detector box, tracker box
 	def overlape_ratio(box1,box2):
 		x_overlap = float(box1[2] + box2[2] - (max(box1[0]+box1[2],box2[0]+box2[2]) - min(box1[0],box2[0])))
 		y_overlap = float(box1[3] + box2[3] - (max(box1[1]+box1[3],box2[1]+box2[3]) - min(box1[1],box2[1])))
@@ -120,7 +123,14 @@ class FRCNNDetector:
 			x_overlap = 0
 		if(y_overlap < 0): 
 			y_overlap = 0
-		return (x_overlap * y_overlap) / (float())
+		return (x_overlap * y_overlap) / (float(box1[2]) * float(box1[3]) + float(box2[2]) * float(box2[3]))
+
+	#determine whether face or not 
+	def is_face(box):
+		for i in range(self.result_num):
+			if(self.overlape_ratio([self.result[i][0:4]],box) > self.overlap_th):
+				return 1
+		return 0
 
 
 # KCF tracker
