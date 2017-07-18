@@ -72,7 +72,7 @@ if __name__ == '__main__':
 		if not ret:
 			break
 
-		counter++
+		counter = counter + 1
 		if(counter%4 == 0):
 			detector.update(frame)
 
@@ -89,17 +89,16 @@ if __name__ == '__main__':
 
 			boundingbox = map(int, boundingbox)
 
-			if(detector.is_face(boundingbox)):
-				#do nothing
-			elif(detector.result_num > 0):
-				boundingbox = detector.result[0]
-				tracker.init(detector.best_face, frame)
-			elif(grace_counter < grace_counter):
-				grace_counter++
-			else:
-				initTracking = True
-				onTracking = False
-				return
+			if(not detector.is_face(boundingbox)):
+				if(detector.result_num > 0):
+					boundingbox = detector.result[0]
+					tracker.init(detector.best_face, frame)	
+				elif(grace_counter < grace_counter):
+					grace_counter = grace_counter + 1
+				else:
+					initTracking = True
+					onTracking = False
+					continue
 
 			cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
 			duration = 0.8*duration + 0.2*(t1-t0)

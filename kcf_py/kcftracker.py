@@ -88,7 +88,7 @@ def subwindow(img, window, borderType=cv2.BORDER_CONSTANT):
 class FRCNNDetector:
 	def __init__(self):
 		#result array
-		self.result = 0
+		self.result = []
 		#best score 
 		self.best_result = 0
 		#best score location
@@ -100,11 +100,13 @@ class FRCNNDetector:
 
 	def update(self, image):
 		#faster rcnn result
-		self.result = 0
+		self.result = []
 		#sort the position in decending order
 		result = self.result
-		self.result = sorted(result, key=lambda result:result[4],reverse=True)
 		self.result_num = np.shape(self.result)[0]
+		if (self.result_num > 0):
+			self.result = sorted(result, key=lambda result:result[4],reverse=True)
+		
 
 	def no_face():
 		return (self.result_num == 0)
