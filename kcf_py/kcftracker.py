@@ -85,10 +85,47 @@ def subwindow(img, window, borderType=cv2.BORDER_CONSTANT):
 	return res
 
 
+class FRCNNDetector:
+	def __init__(self):
+		#result array
+		self.result = 0
+		#best score 
+		self.best_result = 0
+		#best score location
+		self.best_location = [0,0,0,0]
+		#threshhold to be face 
+		self.th = 0
+		self.result_num = 0
+
+	def update(self, image):
+		#faster rcnn result
+		self.result = 0
+		#sort the position in decending order
+		self.result = sorted(self.result, key=lambda self.result:self.result[4],reverse=True)
+		self.result_num = np.shape(self.result)[0]
+
+	def no_face():
+		return (self.result_num == 0)
+
+	def best_face():
+		if(!self.no_face()):
+			return self.result[0]
+		else:
+			return 0
+
+	def overlape_ratio(box1,box2):
+		x_overlap = float(box1[2] + box2[2] - (max(box1[0]+box1[2],box2[0]+box2[2]) - min(box1[0],box2[0])))
+		y_overlap = float(box1[3] + box2[3] - (max(box1[1]+box1[3],box2[1]+box2[3]) - min(box1[1],box2[1])))
+		if(x_overlap < 0): 
+			x_overlap = 0
+		if(y_overlap < 0): 
+			y_overlap = 0
+		return (x_overlap * y_overlap) / (float())
+
 
 # KCF tracker
 class KCFTracker:
-	def __init__(self, hog=False, fixed_window=True, multiscale=False):
+	def __init__(self, hog=False, fixed_window=True, multiscale=True):
 		self.lambdar = 0.0001   # regularization
 		self.padding = 2.5   # extra area surrounding the target
 		self.output_sigma_factor = 0.125   # bandwidth of gaussian target
@@ -181,6 +218,7 @@ class KCFTracker:
 		return d
 
 	def getFeatures(self, image, inithann, scale_adjust=1.0):
+		#print np.shape(image)
 		extracted_roi = [0,0,0,0]   #[int,int,int,int]
 		cx = self._roi[0] + self._roi[2]/2  #float
 		cy = self._roi[1] + self._roi[3]/2  #float
@@ -310,7 +348,7 @@ class KCFTracker:
 		if(self._roi[1]+self._roi[3] <= 0):  self._roi[1] = -self._roi[3] + 2
 		assert(self._roi[2]>0 and self._roi[3]>0)
 
-		#x = self.getFeatures(image, 0, 1.0)
-		#self.train(x, self.interp_factor)
+		x = self.getFeatures(image, 0, 1.0)
+		self.train(x, self.interp_factor)
 
 		return self._roi
