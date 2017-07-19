@@ -1,7 +1,13 @@
 import numpy as np 
 import cv2
-
 import fhog
+import os
+import sys
+
+scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
+sys.path.append(os.path.abspath(scriptpath))
+import demo
+
 
 # ffttools
 def fftd(img, backwards=False):	
@@ -96,41 +102,50 @@ class FRCNNDetector:
 		#threshhold to be face 
 		self.th = 0
 		self.result_num = 0
-		self.overlap_th = 0.6
+		self.overlap_th = 0.5
+		self.detector = demo.detector()
 
 	def update(self, image):
 		#faster rcnn result
-		self.result = []
+		#image = image[0:-1:10,0:-1:10,:]
+		#print np.shape(image)
+		self.result = self.detector.detect(image)
+		print(self.result)
 		#sort the position in decending order
 		result = self.result
-		self.result_num = np.shape(self.result)[0]
+		self.result_num = len(self.result)
+		#print self.result_num
 		if (self.result_num > 0):
 			self.result = sorted(result, key=lambda result:result[4],reverse=True)
 		
 
-	def no_face():
-		return (self.result_num == 0)
+	def exist_face(self):
+		if (self.result_num != 0):
+			return True
 
-	def best_face():
-		if(not self.no_face()):
-			return self.result[0]
+	def best_face(self):
+		if(self.exist_face()):
+			return [int(self.result[0][0]),int(self.result[0][1]),int(self.result[0][2]-self.result[0][0]),int(self.result[0][3]-self.result[0][1])]
 		else:
 			return 0
 
 	#detector box, tracker box
-	def overlape_ratio(box1,box2):
+	def overlape_ratio(self,box1,box2):
+		#print box1
+		#print box2
 		x_overlap = float(box1[2] + box2[2] - (max(box1[0]+box1[2],box2[0]+box2[2]) - min(box1[0],box2[0])))
 		y_overlap = float(box1[3] + box2[3] - (max(box1[1]+box1[3],box2[1]+box2[3]) - min(box1[1],box2[1])))
 		if(x_overlap < 0): 
 			x_overlap = 0
 		if(y_overlap < 0): 
 			y_overlap = 0
-		return (x_overlap * y_overlap) / (float(box1[2]) * float(box1[3]) + float(box2[2]) * float(box2[3]))
-
+		ratio = (x_overlap * y_overlap) / (float(box1[2]) * float(box1[3]) + float(box2[2]) * float(box2[3]))
+		#print ratio
+		return ratio
 	#determine whether face or not 
-	def is_face(box):
+	def is_face(self,box):
 		for i in range(self.result_num):
-			if(self.overlape_ratio([self.result[i][0:4]],box) > self.overlap_th):
+			if(self.overlape_ratio( [int(self.result[i][0]),int(self.result[i][1]),int(self.result[i][2]-self.result[i][0]),int(self.result[i][3]-self.result[i][1])],box) > self.overlap_th):
 				return 1
 		return 0
 
@@ -314,6 +329,7 @@ class KCFTracker:
 
 
 	def init(self, roi, image):
+		#print roi
 		self._roi = map(float, roi)
 		assert(roi[2]>0 and roi[3]>0)
 		self._tmpl = self.getFeatures(image, 1)

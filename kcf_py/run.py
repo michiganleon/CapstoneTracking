@@ -6,13 +6,14 @@ from time import time
 import kcftracker
 
 selectingObject = False
-initTracking = False
+initTracking = True
 onTracking = False
 ix, iy, cx, cy = -1, -1, -1, -1
 w, h = 0, 0
 counter = 0
 grace_period = 50
 grace_counter = 0
+detect_interval = 56
 
 inteval = 1
 duration = 0.01
@@ -73,14 +74,15 @@ if __name__ == '__main__':
 			break
 
 		counter = counter + 1
-		if(counter%4 == 0):
+		if(counter%detect_interval == 0):
 			detector.update(frame)
 
 		if(initTracking):
-			if(not detector.no_face()):
-				tracker.init(detector.best_face, frame)
-			initTracking = False
-			onTracking = True
+			if(counter%detect_interval == 0 and detector.exist_face()):
+				print 1
+				tracker.init(detector.best_face(), frame)
+				initTracking = False
+				onTracking = True
 
 		elif(onTracking):
 			t0 = time()
@@ -89,10 +91,10 @@ if __name__ == '__main__':
 
 			boundingbox = map(int, boundingbox)
 
-			if(not detector.is_face(boundingbox)):
+			if(counter%detect_interval == 0 and (not detector.is_face(boundingbox))):
 				if(detector.result_num > 0):
-					boundingbox = detector.result[0]
-					tracker.init(detector.best_face, frame)	
+					boundingbox = detector.best_face()
+					tracker.init(boundingbox, frame)	
 				elif(grace_counter < grace_counter):
 					grace_counter = grace_counter + 1
 				else:
