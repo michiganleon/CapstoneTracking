@@ -11,7 +11,7 @@ onTracking = False
 ix, iy, cx, cy = -1, -1, -1, -1
 w, h = 0, 0
 counter = 0
-grace_period = 50
+grace_period = 3
 grace_counter = 0
 detect_interval = 56
 
@@ -79,7 +79,6 @@ if __name__ == '__main__':
 
 		if(initTracking):
 			if(counter%detect_interval == 0 and detector.exist_face()):
-				print 1
 				tracker.init(detector.best_face(), frame)
 				initTracking = False
 				onTracking = True
@@ -93,11 +92,16 @@ if __name__ == '__main__':
 
 			if(counter%detect_interval == 0 and (not detector.is_face(boundingbox))):
 				if(detector.result_num > 0):
+					print "re init with another face"
+					grace_counter = 0
 					boundingbox = detector.best_face()
 					tracker.init(boundingbox, frame)	
-				elif(grace_counter < grace_counter):
+				elif(grace_counter < grace_period):
+					print "grace period"
 					grace_counter = grace_counter + 1
 				else:
+					print "re init seq"
+					grace_counter = 0
 					initTracking = True
 					onTracking = False
 					continue
