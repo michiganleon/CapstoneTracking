@@ -11,9 +11,9 @@ onTracking = False
 ix, iy, cx, cy = -1, -1, -1, -1
 w, h = 0, 0
 counter = 0
-grace_period = 3
+grace_period = 10
 grace_counter = 0
-detect_interval = 56
+detect_interval = 14
 
 inteval = 1
 duration = 0.01
