@@ -68,6 +68,7 @@ if __name__ == '__main__':
 	cv2.namedWindow('tracking')
 	#cv2.setMouseCallback('tracking',draw_boundingbox)
 
+	tracking_pts = [] #list to store trajectory points, flush when tracking restart or reach 255 points
 	while(cap.isOpened()):
 		ret, frame = cap.read()
 		if not ret:
@@ -95,7 +96,8 @@ if __name__ == '__main__':
 					print "re init with another face"
 					grace_counter = 0
 					boundingbox = detector.best_face()
-					tracker.init(boundingbox, frame)	
+					tracker.init(boundingbox, frame)
+					tracking_pts = []	
 				elif(grace_counter < grace_period):
 					print "grace period"
 					grace_counter = grace_counter + 1
@@ -107,6 +109,18 @@ if __name__ == '__main__':
 					continue
 
 			cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
+			px = boundingbox[0] + boundingbox[2]/2
+			py = boundingbox[1] + boundingbox[3]/2
+			tracking_pts.insert(0,(px,py))
+			pos = tracking_pts[0]
+			for i in range(0,len(tracking_pts)):
+				cv2.circle(frame,tracking_pts[i],10-(i/25),(255,i,i),(10-(i/25))/2)
+				if (i==0):
+					continue
+				cv2.line(frame,pos,tracking_pts[i],(255,255,255))
+				pos = tracking_pts[i]
+			if len(tracking_pts) >= 255:
+				tracking_pts = []
 			duration = 0.8*duration + 0.2*(t1-t0)
 			#duration = t1-t0
 			cv2.putText(frame, 'FPS: '+str(1/duration)[:4].strip('.'), (8,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
