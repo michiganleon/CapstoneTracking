@@ -4,8 +4,8 @@ import fhog
 import os
 import sys
 
-scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
-sys.path.append(os.path.abspath(scriptpath))
+# scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
+# sys.path.append(os.path.abspath(scriptpath))
 import demo
 
 
