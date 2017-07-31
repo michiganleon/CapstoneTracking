@@ -102,7 +102,7 @@ class FRCNNDetector:
 		#threshhold to be face 
 		self.th = 0
 		self.result_num = 0
-		self.overlap_th = 0.5
+		self.overlap_th = 0.35
 		self.detector = demo.detector()
 
 	def update(self, image):
@@ -110,7 +110,7 @@ class FRCNNDetector:
 		#image = image[0:-1:10,0:-1:10,:]
 		#print np.shape(image)
 		self.result = self.detector.detect(image)
-		print(self.result)
+		#print(self.result)
 		#sort the position in decending order
 		result = self.result
 		self.result_num = len(self.result)
