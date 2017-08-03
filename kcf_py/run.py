@@ -64,7 +64,7 @@ if __name__ == '__main__':
 	else:  assert(0), "too many arguments"
 
 
-	tracker = kcftracker.KCFTracker(False, False, True)  # hog, fixed_window, multiscale
+	tracker = kcftracker.KCFTracker(True, False, True)  # hog, fixed_window, multiscale
 	#if you use hog feature, there will be a short pause after you draw a first boundingbox, that is due to the use of Numba.
 	detector = kcftracker.FRCNNDetector()
 	
@@ -119,18 +119,18 @@ if __name__ == '__main__':
 			cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
 			px = boundingbox[0] + boundingbox[2]/2
 			py = boundingbox[1] + boundingbox[3]/2
-			#tracking_pts.insert(0,(px,py))
-			#pos = tracking_pts[0]
-			#for i in range(0,len(tracking_pts)):
-			#	cv2.circle(frame,tracking_pts[i],10-(i/25),(255,i,i),(10-(i/25))/2)
-			#	if (i==0):
-			#		continue
-			#	cv2.line(frame,pos,tracking_pts[i],(255,255,255))
-			#	pos = tracking_pts[i]
-			#if len(tracking_pts) >= 255:
-			#	tracking_pts.pop(0)
-			#duration = 0.8*duration + 0.2*(t1-t0)
-			#duration = t1-t0
+#			tracking_pts.insert(0,(px,py))
+#			pos = tracking_pts[0]
+#			for i in range(0,len(tracking_pts)):
+#				cv2.circle(frame,tracking_pts[i],10-(i/25),(255,i,i),(10-(i/25))/2)
+#				if (i==0):
+#					continue
+#				cv2.line(frame,pos,tracking_pts[i],(255,255,255))
+#				pos = tracking_pts[i]
+#			if len(tracking_pts) >= 255:
+#				tracking_pts.pop(254)
+			duration = 0.8*duration + 0.2*(t1-t0)
+			duration = t1-t0
 			cv2.putText(frame, 'FPS: '+str(1/duration)[:4].strip('.'), (8,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
 
 		#cv2.imshow('tracking', frame)
