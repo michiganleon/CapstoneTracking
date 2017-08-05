@@ -13,7 +13,7 @@ w, h = 0, 0
 counter = 0
 grace_period = 50
 grace_counter = 0
-detect_interval = 2
+detect_interval = 1
 
 inteval = 1
 duration = 0.01
@@ -64,16 +64,16 @@ if __name__ == '__main__':
 	else:  assert(0), "too many arguments"
 
 
-	tracker = kcftracker.KCFTracker(True, False, True)  # hog, fixed_window, multiscale
+	tracker = kcftracker.KCFTracker(False, False, True)  # hog, fixed_window, multiscale
 	#if you use hog feature, there will be a short pause after you draw a first boundingbox, that is due to the use of Numba.
 	detector = kcftracker.FRCNNDetector()
 	
-	w=int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
-	h=int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
-	fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
-	out = cv2.VideoWriter('output.mp4', fourcc, 25.0, (w,h))
+	#w=int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
+	#h=int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
+	#fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
+	#out = cv2.VideoWriter('output.mp4', fourcc, 25.0, (w,h))
 
-	#cv2.namedWindow('tracking')
+	cv2.namedWindow('tracking')
 	#cv2.setMouseCallback('tracking',draw_boundingbox)
 
 	tracking_pts = [] #list to store trajectory points, flush when tracking restart or reach 255 points
@@ -133,8 +133,8 @@ if __name__ == '__main__':
 			duration = t1-t0
 			cv2.putText(frame, 'FPS: '+str(1/duration)[:4].strip('.'), (8,20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
 
-		#cv2.imshow('tracking', frame)
-		out.write(frame)
+		cv2.imshow('tracking', frame)
+		#out.write(frame)
 		c = cv2.waitKey(inteval) & 0xFF
 		if c==27 or c==ord('q'):
 			break
