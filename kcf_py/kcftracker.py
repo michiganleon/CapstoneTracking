@@ -3,6 +3,7 @@ import cv2
 import fhog
 import os
 import sys
+import resultpq
 
 #scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
 #sys.path.append(os.path.abspath(scriptpath))
@@ -156,6 +157,7 @@ class KCFTracker:
 		self.lambdar = 0.0001   # regularization
 		self.padding = 2.5   # extra area surrounding the target
 		self.output_sigma_factor = 0.125   # bandwidth of gaussian target
+		self.detector = FRCNNDetector();
 
 		if(hog):  # HOG feature
 			# VOT
@@ -306,7 +308,7 @@ class KCFTracker:
 	def detect(self, z, x):
 		k = self.gaussianCorrelation(x, z)
 		res = real(fftd(complexMultiplication(self._alphaf, fftd(k)), True))
-
+		#print np.shape(res)
 		_, pv, _, pi = cv2.minMaxLoc(res)   # pv:float  pi:tuple of int
 		p = [float(pi[0]), float(pi[1])]   # cv::Point2f, [x,y]  #[float,float]
 
