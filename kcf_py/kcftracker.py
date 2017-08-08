@@ -103,7 +103,7 @@ class FRCNNDetector:
 		#threshhold to be face 
 		self.th = 0
 		self.result_num = 0
-		self.overlap_th = 0.6
+		self.overlap_th = 0.8
 		self.detector = demo.detector()
 		self.scaleX = 1
 		self.scaleY = 1
@@ -131,6 +131,9 @@ class FRCNNDetector:
 		#	self.result[i][1] = 1.0/scaleY * self.result[i][1]
 		#	self.result[i][3] = 1.0/scaleY * self.result[i][3]
 		#print self.result
+		#for i in range(len(self.result)):
+		#	cv2.rectangle(image,(int(self.result[i][0]),int(self.result[i][1])), (int(self.result[i][2]),int(self.result[i][3])), (255,0,255), 1)
+
 
 	def exist_face(self):
 		if (self.result_num != 0):
@@ -153,12 +156,12 @@ class FRCNNDetector:
 		if(y_overlap < 0): 
 			y_overlap = 0
 		ratio = (x_overlap * y_overlap) / (float(box1[2]) * float(box1[3]) + float(box2[2]) * float(box2[3]) - (x_overlap * y_overlap))
-		#print ratio
+		print ratio
 		return ratio
 	#determine whether face or not 
 	def is_face(self,box):
 		for i in range(self.result_num):
-			if(self.overlape_ratio( [int(self.result[i][0]),int(self.result[i][1]),int(self.result[i][2]-self.result[i][0]),int(self.result[i][3]-self.result[i][1])],box) > self.overlap_th):
+			if(self.overlape_ratio([int(self.result[i][0]),int(self.result[i][1]),int(self.result[i][2]-self.result[i][0]),int(self.result[i][3]-self.result[i][1])],box) > self.overlap_th):
 				return 1
 		return 0
 

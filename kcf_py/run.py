@@ -118,6 +118,7 @@ if __name__ == '__main__':
 					continue
 
 			cv2.rectangle(frame,(boundingbox[0],boundingbox[1]), (boundingbox[0]+boundingbox[2],boundingbox[1]+boundingbox[3]), (0,255,255), 1)
+
 			px = boundingbox[0] + boundingbox[2]/2
 			py = boundingbox[1] + boundingbox[3]/2
 #			tracking_pts.insert(0,(px,py))
