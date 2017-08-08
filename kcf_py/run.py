@@ -79,6 +79,7 @@ if __name__ == '__main__':
 	tracking_pts = [] #list to store trajectory points, flush when tracking restart or reach 255 points
 	while(cap.isOpened()):
 		ret, frame = cap.read()
+		#print np.shape(frame)
 		if not ret:
 			break
 
