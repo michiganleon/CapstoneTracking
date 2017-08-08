@@ -10,6 +10,20 @@ import resultpq
 import demo
 
 
+#detector box, tracker box
+def overlape_ratio(box1,box2):
+	#print box1
+	#print box2
+	x_overlap = float(box1[2] + box2[2] - (max(box1[0]+box1[2],box2[0]+box2[2]) - min(box1[0],box2[0])))
+	y_overlap = float(box1[3] + box2[3] - (max(box1[1]+box1[3],box2[1]+box2[3]) - min(box1[1],box2[1])))
+	if(x_overlap < 0): 
+		x_overlap = 0
+	if(y_overlap < 0): 
+		y_overlap = 0
+	ratio = (x_overlap * y_overlap) / (float(box2[2]) * float(box2[3]) + float(box1[2]) * float(box1[3]) - x_overlap * y_overlap)
+	#print ratio
+	return ratio
+
 # ffttools
 def fftd(img, backwards=False):	
 	# shape of img can be (m,n), (m,n,1) or (m,n,2)	
@@ -118,6 +132,7 @@ class FRCNNDetector:
 		#print self.result_num
 		if (self.result_num > 0):
 			self.result = sorted(result, key=lambda result:result[4],reverse=True)
+		return self.result
 		
 
 	def exist_face(self):
@@ -305,22 +320,30 @@ class KCFTracker:
 		FeaturesMap = self.hann * FeaturesMap
 		return FeaturesMap
 
-	def detect(self, z, x):
+	def detect(self, z, x, pq, scale):
 		k = self.gaussianCorrelation(x, z)
 		res = real(fftd(complexMultiplication(self._alphaf, fftd(k)), True))
 		#print np.shape(res)
-		_, pv, _, pi = cv2.minMaxLoc(res)   # pv:float  pi:tuple of int
-		p = [float(pi[0]), float(pi[1])]   # cv::Point2f, [x,y]  #[float,float]
+		#_, pv, _, pi = cv2.minMaxLoc(res)   # pv:float  pi:tuple of int
+		
+		for i in range(np.shape(res)[0]):
+			for j in range(np.shape(res)[1]):
+				if (scale == 1):
+					pq.put([i,j,res[i][j], scale])
+				else:
+					pq.put([i,j,res[i][j] * self.scale_weight, scale])
 
-		if(pi[0]>0 and pi[0]<res.shape[1]-1):
-			p[0] += self.subPixelPeak(res[pi[1],pi[0]-1], pv, res[pi[1],pi[0]+1])
-		if(pi[1]>0 and pi[1]<res.shape[0]-1):
-			p[1] += self.subPixelPeak(res[pi[1]-1,pi[0]], pv, res[pi[1]+1,pi[0]])
 
-		p[0] -= res.shape[1] / 2.
-		p[1] -= res.shape[0] / 2.
+		#p = [float(pi[0]), float(pi[1])]   # cv::Point2f, [x,y]  #[float,float]
+		#if(pi[0]>0 and pi[0]<res.shape[1]-1):
+		#	p[0] += self.subPixelPeak(res[pi[1],pi[0]-1], pv, res[pi[1],pi[0]+1])
+		#if(pi[1]>0 and pi[1]<res.shape[0]-1):
+		#	p[1] += self.subPixelPeak(res[pi[1]-1,pi[0]], pv, res[pi[1]+1,pi[0]])
 
-		return p, pv
+		#p[0] -= res.shape[1] / 2.
+		#p[1] -= res.shape[0] / 2.
+
+		return [pq, res]
 
 	def train(self, x, train_interp_factor):
 		k = self.gaussianCorrelation(x, x)
@@ -340,6 +363,9 @@ class KCFTracker:
 		self.train(self._tmpl, 1.0)
 
 	def update(self, image):
+
+		detection_result = self.detector.update(image)
+		
 		if(self._roi[0]+self._roi[2] <= 0):  self._roi[0] = -self._roi[2] + 1
 		if(self._roi[1]+self._roi[3] <= 0):  self._roi[1] = -self._roi[2] + 1
 		if(self._roi[0] >= image.shape[1]-1):  self._roi[0] = image.shape[1] - 2
@@ -348,35 +374,99 @@ class KCFTracker:
 		cx = self._roi[0] + self._roi[2]/2.
 		cy = self._roi[1] + self._roi[3]/2.
 
-		loc, peak_value = self.detect(self._tmpl, self.getFeatures(image, 0, 1.0))
+		pq = resultpq.resultQ(10)
+		[pq,res0] = self.detect(self._tmpl, self.getFeatures(image, 0, 1.0), pq, 1)
 
 		if(self.scale_step != 1):
 			# Test at a smaller _scale
-			new_loc1, new_peak_value1 = self.detect(self._tmpl, self.getFeatures(image, 0, 1.0/self.scale_step))
+			[pq, res1] = self.detect(self._tmpl, self.getFeatures(image, 0, 1.0/self.scale_step), pq, 1.0/self.scale_step)
 			# Test at a bigger _scale
-			new_loc2, new_peak_value2 = self.detect(self._tmpl, self.getFeatures(image, 0, self.scale_step))
+			[pq, res2] = self.detect(self._tmpl, self.getFeatures(image, 0, self.scale_step), pq, self.scale_step)
+			#print pq.show()
+		
 
-			if(self.scale_weight*new_peak_value1 > peak_value and new_peak_value1>new_peak_value2):
-				loc = new_loc1
-				peak_value = new_peak_value1
-				self._scale /= self.scale_step
-				self._roi[2] /= self.scale_step
-				self._roi[3] /= self.scale_step
-			elif(self.scale_weight*new_peak_value2 > peak_value):
-				loc = new_loc2
-				peak_value = new_peak_value2
-				self._scale *= self.scale_step
-				self._roi[2] *= self.scale_step
-				self._roi[3] *= self.scale_step
+		topresults = pq.show()
+		newscores = []
 		
-		self._roi[0] = cx - self._roi[2]/2.0 + loc[0]*self.cell_size*self._scale
-		self._roi[1] = cy - self._roi[3]/2.0 + loc[1]*self.cell_size*self._scale
+		for i in range(len(topresults)):
+			p1 = topresults[i][2][0]
+			p2 = topresults[i][2][1]
+			p = [float(p1), float(p2)]   # cv::Point2f, [x,y]  #[float,float]
+			scale = topresults[i][2][3]
+			score = topresults[i][0]
+
+			if(scale == 1):
+				res = res0
+			elif(scale < 1):
+				res = res1
+			else:
+				res = res2
+
+			if(p1>0 and p1<res.shape[1]-1):
+				p[0] += self.subPixelPeak(res[p2,p1-1], score, res[p2,p1+1])
+			if(p2>0 and p2<res.shape[0]-1):
+				p[1] += self.subPixelPeak(res[p2-1,p1], score, res[p2+1,p1])
+
+			p[0] -= res.shape[1] / 2.
+			p[1] -= res.shape[0] / 2.
+
+			box = [0,0,0,0]
+			if(scale == 1):
+				box[2] = self._roi[2]
+				box[3] = self._roi[3]
+			elif(scale < 1):
+				box[2] = self._roi[2] / self.scale_step
+				box[3] = self._roi[3] / self.scale_step
+			else:
+				box[2] = self._roi[2] * self.scale_step
+				box[3] = self._roi[3] * self.scale_step
+
+			box[0] = cx - box[2]/2.0 + box[0]*self.cell_size*self._scale
+			box[1] = cy - box[3]/2.0 + box[1]*self.cell_size*self._scale
+			
+			if(box[0] >= image.shape[1]-1):  box[0] = image.shape[1] - 1
+			if(box[1] >= image.shape[0]-1):  box[1] = image.shape[0] - 1
+			if(box[0]+box[2] <= 0):  box[0] = -box[2] + 2
+			if(box[1]+box[3] <= 0):  box[1] = -box[3] + 2
+			assert(box[2]>0 and box[3]>0)
+
+			combined_score = score
+			newscores.append([box,combined_score,scale])
+			for j in range(len(detection_result)):
+				detect_box = [detection_result[j][0],detection_result[j][1],detection_result[j][2]-detection_result[j][0],detection_result[j][3]-detection_result[j][1]]
+				detect_score = detection_result[j][4]
+				combined_score = score + 0.1 * overlape_ratio(box, detection_result[j]) * detect_score
+				newscores.append([box,combined_score,scale])
 		
-		if(self._roi[0] >= image.shape[1]-1):  self._roi[0] = image.shape[1] - 1
-		if(self._roi[1] >= image.shape[0]-1):  self._roi[1] = image.shape[0] - 1
-		if(self._roi[0]+self._roi[2] <= 0):  self._roi[0] = -self._roi[2] + 2
-		if(self._roi[1]+self._roi[3] <= 0):  self._roi[1] = -self._roi[3] + 2
-		assert(self._roi[2]>0 and self._roi[3]>0)
+		newscores = sorted(newscores, key=lambda row:row[1],reverse = True)
+		self._scale *= newscores[0][2]
+		self._roi[0] = newscores[0][0][0]
+		self._roi[1] = newscores[0][0][1]
+		self._roi[2] = newscores[0][0][2]
+		self._roi[3] = newscores[0][0][3]
+
+
+#			if(self.scale_weight*new_peak_value1 > peak_value and new_peak_value1>new_peak_value2):
+#				loc = new_loc1
+#				peak_value = new_peak_value1
+#				self._scale /= self.scale_step
+#				self._roi[2] /= self.scale_step
+#				self._roi[3] /= self.scale_step
+#			elif(self.scale_weight*new_peak_value2 > peak_value):
+#				loc = new_loc2
+#				peak_value = new_peak_value2
+#				self._scale *= self.scale_step
+#				self._roi[2] *= self.scale_step
+#				self._roi[3] *= self.scale_step
+		
+#		self._roi[0] = cx - self._roi[2]/2.0 + loc[0]*self.cell_size*self._scale
+#		self._roi[1] = cy - self._roi[3]/2.0 + loc[1]*self.cell_size*self._scale
+#		
+#		if(self._roi[0] >= image.shape[1]-1):  self._roi[0] = image.shape[1] - 1
+#		if(self._roi[1] >= image.shape[0]-1):  self._roi[1] = image.shape[0] - 1
+#		if(self._roi[0]+self._roi[2] <= 0):  self._roi[0] = -self._roi[2] + 2
+#		if(self._roi[1]+self._roi[3] <= 0):  self._roi[1] = -self._roi[3] + 2
+#		assert(self._roi[2]>0 and self._roi[3]>0)
 
 		x = self.getFeatures(image, 0, 1.0)
 		self.train(x, self.interp_factor)
