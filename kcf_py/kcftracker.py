@@ -3,11 +3,12 @@ import cv2
 import fhog
 import os
 import sys
-scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
-sys.path.append(os.path.abspath(scriptpath))
-import demo
-#from resizeimage import resizeimage
-#from PIL import Image
+
+#un comment those lines to use rcnn detector, modify the path to rcnn install path
+#scriptpath = "/Users/huxuefeng/Desktop/mxnet-master/example/rcnn"
+#sys.path.append(os.path.abspath(scriptpath))
+#import demo
+import dlib_demo
 import scipy.ndimage
 
 # ffttools
@@ -91,8 +92,8 @@ def subwindow(img, window, borderType=cv2.BORDER_CONSTANT):
 		res = cv2.copyMakeBorder(res, border[1], border[3], border[0], border[2], borderType)
 	return res
 
-
-class FRCNNDetector:
+#detector class
+class Detector:
 	def __init__(self):
 		#result array
 		self.result = []
@@ -103,37 +104,21 @@ class FRCNNDetector:
 		#threshhold to be face 
 		self.th = 0
 		self.result_num = 0
-		self.overlap_th = 0.8
-		self.detector = demo.detector()
+		self.overlap_th = 0.3
+		#use rcnn detector
+		#self.detector = demo.detector()
+		#use dlib detector
+		self.detector = dlib_demo.detector()
 		self.scaleX = 1
 		self.scaleY = 1
 
 	def update(self, image):
-		#faster rcnn result
-		#image = image[0:-1:10,0:-1:10,:]
-		#print np.shape(image)
-		#size = np.shape(image)
-		#scaleX = 1280.0/size[0]
-		#scaleY = 960.0/size[1]
-		#img = Image.open(image)
-		#image = scipy.ndimage.zoom(image, [scaleX,scaleY,1], order=1)
 		self.result = self.detector.detect(image)
-		#print(self.result)
 		#sort the position in decending order
 		result = self.result
 		self.result_num = len(self.result)
-		#print self.result
 		if (self.result_num > 0):
 			self.result = sorted(result, key=lambda result:result[4],reverse=True)
-		#for i in range(len(self.result)):
-		#	self.result[i][0] = 1.0/scaleX * self.result[i][0]
-		#	self.result[i][2] = 1.0/scaleX * self.result[i][2]
-		#	self.result[i][1] = 1.0/scaleY * self.result[i][1]
-		#	self.result[i][3] = 1.0/scaleY * self.result[i][3]
-		#print self.result
-		#for i in range(len(self.result)):
-		#	cv2.rectangle(image,(int(self.result[i][0]),int(self.result[i][1])), (int(self.result[i][2]),int(self.result[i][3])), (255,0,255), 1)
-
 
 	def exist_face(self):
 		if (self.result_num != 0):
