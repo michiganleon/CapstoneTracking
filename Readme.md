@@ -13,10 +13,6 @@ In this repo,
 
 **可以用/kcf_py下面的run.py来跑demo，
 
--（+*）  Usage: python run.py will connect to the camera, and python run.py filename will use video file as input
--（+*）  by default using dlib detector. Install RCNN lib and modify kcftracker.py line 7 & 109 to use RCNN dector.
--（+*）  check run.py line 34 for hog features
--（+*）  check branch: mix-ranking for an alternative score function.
--（+*）  check run.py line 94-104 to show trajectory. 
+-（+*）  Usage: python run.py will connect to the camera, and python run.py filename will use video file as input -（+*）  by default using dlib detector. Install RCNN lib and modify kcftracker.py line 7 & 109 to use RCNN dector. -（+*）  check run.py line 34 for hog features -（+*）  check branch: mix-ranking for an alternative score function. -（+*）  check run.py line 94-104 to show trajectory. 
 
 Contact: leonhuxf@umich.edu
