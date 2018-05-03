@@ -11,7 +11,7 @@ In this repo,
 2.  /kcf_py includes the src of the project
 3.  /kcf_master a c++ version kcf. 
 
-**可以用/kcf_py下面的run.py来跑demo，
+**run kcf_py/run.py to run the program
 
 1.  Usage: python run.py will connect to the camera, and python run.py filename will use video file as input 
 2.  by default using dlib detector. Install RCNN lib and modify kcftracker.py line 7 & 109 to use RCNN dector.
